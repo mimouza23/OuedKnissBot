@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ouedkniss Bot Credits</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://adsgram.ai/sdk.js"></script>
+    <style>
+        :root {
+            --primary: #e95903;
+            --bg: #121212;
+            --card: rgba(255, 255, 255, 0.05);
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+            background: linear-gradient(45deg, var(--primary), #ff8c00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .credit-value {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .credit-label {
+            font-size: 14px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, opacity 0.2s;
+            box-shadow: 0 4px 15px rgba(233, 89, 3, 0.3);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not_allowed;
+        }
+
+        .footer {
+            margin-top: auto;
+            font-size: 12px;
+            opacity: 0.5;
+            text-align: center;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Credit Center</h1>
+
+        <div class="card">
+            <div class="credit-label">Best Price Checks</div>
+            <div id="best-credits" class="credit-value">...</div>
+        </div>
+
+        <div class="card">
+            <div class="credit-label">Price Drop Slots</div>
+            <div id="slot-credits" class="credit-value">...</div>
+        </div>
+
+        <div class="card" style="background: transparent; border: none;">
+            <p style="font-size: 14px; margin-bottom: 20px; opacity: 0.8;">
+                Watch a short ad to earn +1 Check and +1 Slot!
+            </p>
+            <button id="ad-btn" class="btn">📺 Watch Ad & Earn</button>
+        </div>
+
+        <div class="footer">
+            Ouedkniss Price Bot • v1.0
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const userId = tg.initDataUnsafe.user?.id || 12345; // Fallback for testing
+        const API_BASE = "https://your-api-url.onrender.com"; // UPDATE THIS
+        const AD_BLOCK_ID = "YOUR_ADSGRAM_BLOCK_ID"; // UPDATE THIS
+
+        async function fetchUserData() {
+            try {
+                const resp = await fetch(`${API_BASE}/user/${userId}`);
+                const data = await resp.json();
+                document.getElementById('best-credits').innerText = data.best_price_credits;
+                document.getElementById('slot-credits').innerText = data.price_drop_slots;
+            } catch (e) {
+                console.error("Failed to fetch user data", e);
+            }
+        }
+
+        const AdController = window.Adsgram.init({ blockId: AD_BLOCK_ID });
+
+        document.getElementById('ad-btn').onclick = async () => {
+            try {
+                const result = await AdController.show();
+                if (result.done) {
+                    // Ad finished, reward user
+                    await fetch(`${API_BASE}/reward`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: userId })
+                    });
+                    fetchUserData();
+                    tg.showAlert("🎉 Reward added! Check your bot.");
+                }
+            } catch (e) {
+                console.error("Ad failed", e);
+                tg.showAlert("❌ Ad failed to load. Please try again later.");
+            }
+        };
+
+        fetchUserData();
+    </script>
+</body>
+
+</html>
